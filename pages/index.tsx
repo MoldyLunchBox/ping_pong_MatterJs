@@ -15,29 +15,51 @@ export default function Home() {
     Render = Matter.Render,
     Runner = Matter.Runner,
     Bodies = Matter.Bodies,
+    Body = Matter.Body,
+
     Composite = Matter.Composite,
     Mouse = Matter.Mouse,
     MouseConstraint = Matter.MouseConstraint;
 
     var engine = Engine.create();
+    engine.gravity = {    
+      x: 0,
+      y: 0,
+      scale: 0
+  };
     var render = Render.create({
       element: document.body,
       engine: engine,
       options:{
         background: "transparent",
-        wireframes: false
+        wireframes: false,
+        width: 1000,
+        height: 600,
       }
   });
+  Render.lookAt(render, {
+    min: { x: 0, y: 0 },
+    max: { x: 800, y: 600 }
+  });
   // create two boxes and a ground
-var boxA = Bodies.rectangle(400, 200, 80, 80, {
-  inertia: Infinity,
-  frictionAir: 1
-});
-var boxB = Bodies.rectangle(450, 50, 80, 80);
-var ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true });
-var wall = Bodies.rectangle(0, 400, 60, 810, { isStatic: true });
+var boxA = Bodies.circle(400, 200, 20,{  
+  velocity: { x: 5, y: 1 } ,restitution: 1.01, friction: 0,frictionAir: 0});
+var boxB = Bodies.rectangle(20, 300, 40, 200,{inertia: Infinity});
+var ground = Bodies.rectangle(500, 0, 1000, 20, {  isStatic: true,
+  render: {
+    fillStyle: 'blue'
+  }});
+var roof = Bodies.rectangle(500, 600, 1000, 20, {   isStatic: true,
+  render: {
+    fillStyle: 'red'
+  }});
+  var wall = Bodies.rectangle(900, 300, 20, 1000, {  isStatic: true,
+    render: {
+      fillStyle: 'green'
+    }});
+    Body.setVelocity(boxA, { x: 5, y: 5 });
 // add all of the bodies to the world
-Composite.add(engine.world, [boxA, boxB, ground,wall ]);
+Composite.add(engine.world, [boxA, boxB, ground, roof, wall ]);
 
 // run the renderer
 Render.run(render);
@@ -58,7 +80,13 @@ let mouseConstraint = MouseConstraint.create(engine,{
   }
 })
 Events.on(mouseConstraint, "mousemove", (e)=>{
-  boxA.position.y =  e.mouse.position.y
+  boxB.position.y =  e.mouse.position.y
+  boxB.position.x=40
+})
+
+Events.on(mouseConstraint, "mouseup", (e)=>{
+  Body.setVelocity(boxA, { x: 5, y: 5 });
+
 })
 Composite.add(engine.world, [mouseConstraint]);
 
