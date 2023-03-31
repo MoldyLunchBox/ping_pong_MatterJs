@@ -22,7 +22,10 @@ interface MatterObjects {
 
 interface MatterBodies {
     ball: Matter.Body
-    boxB: Matter.Body
+    leftPaddle: Matter.Body
+    rightPaddle: Matter.Body
+    myPaddle: Matter.Body
+    othersPaddle: Matter.Body
     ground: Matter.Body
     roof: Matter.Body
     wall: Matter.Body
@@ -30,12 +33,14 @@ interface MatterBodies {
 }
 
 export class matterJsModules {
-    socket : Socket
+    socket: Socket
     modules: MatterModules;
     objects: MatterObjects = { engine: null, render: null, runner: null, mouse: null, mouseConstraint: null };
-    bodies: MatterBodies 
+    bodies: MatterBodies
+    paddleSide: string = ""
     constructor() {
-        this.socket =  io('http://localhost:3008');
+        this.socket = io('http://localhost:3008');
+
         this.modules = {
             Engine: Matter.Engine,
             Render: Matter.Render,
@@ -48,8 +53,19 @@ export class matterJsModules {
         }
         this.bodies = {
             ball: this.modules.Bodies.circle(400, 200, 20),
-            
-            boxB: this.modules.Bodies.rectangle(50, 300, 40, 200, { isStatic: true }),
+
+            leftPaddle: this.modules.Bodies.rectangle(50, 300, 40, 200, {
+                isStatic: true, render: {
+                    fillStyle: 'green'
+                }
+            }),
+            rightPaddle: this.modules.Bodies.rectangle(1000 - 50, 300, 40, 200, {
+                isStatic: true, render: {
+                    fillStyle: 'red'
+                }
+            }),
+            myPaddle: this.modules.Bodies.rectangle(0, 0, 0, 0, { isStatic: true }),
+            othersPaddle: this.modules.Bodies.rectangle(0, 0, 0, 0, { isStatic: true }),
             ground: this.modules.Bodies.rectangle(500, 0, 1000, 20, {
                 isStatic: true,
                 render: {
@@ -62,7 +78,7 @@ export class matterJsModules {
                     fillStyle: 'red'
                 }
             }),
-            wall: this.modules.Bodies.rectangle(900, 300, 20, 1000, {
+            wall: this.modules.Bodies.rectangle(1000, 300, 20, 1000, {
                 isStatic: true,
                 render: {
                     fillStyle: 'green'
@@ -74,11 +90,27 @@ export class matterJsModules {
                     fillStyle: 'green'
                 }
             }),
-            
+
         }
+        this.socket.on("paddleAssigned", (data) => {
+            console.log("recieved paddle", data)
+            this.paddleSide = data
+            if (this.paddleSide == "left") {
+                this.bodies.myPaddle = this.bodies.leftPaddle
+                this.bodies.othersPaddle = this.bodies.rightPaddle
+
+            } else {
+                this.bodies.myPaddle = this.bodies.rightPaddle
+                this.bodies.othersPaddle = this.bodies.leftPaddle
+
+            }
+
+            this.updateOtherPaddle()
+        })
+
     }
     createModules() {
-            this.objects.engine = this.modules.Engine.create(),
+        this.objects.engine = this.modules.Engine.create(),
             this.objects.render = this.modules.Render.create({
                 element: document.body,
                 engine: this.objects.engine,
@@ -100,17 +132,18 @@ export class matterJsModules {
                     }
                 }
             })
-        }
-    
+    }
+
     createBodies() {
-  
-        this.modules.Composite.add(this.objects.engine.world, [this.bodies.ball, this.bodies.boxB, this.bodies.ground, this.bodies.roof, this.bodies.wall, this.bodies.wallLeft ]);
+
+        this.modules.Composite.add(this.objects.engine.world, [this.bodies.ball, this.bodies.leftPaddle, this.bodies.ground, this.bodies.roof, this.bodies.wall, this.bodies.wallLeft, this.bodies.rightPaddle]);
     }
     events() {
 
         Events.on(this.objects.mouseConstraint, "mousemove", (e) => {
-            this.modules.Body.setPosition(this.bodies.boxB, { x: 60, y: e.mouse.position.y });
-            this.socket?.emit("paddle", { x:60, y: e.mouse.position.y  })
+            this.modules.Body.setPosition(this.bodies.myPaddle, { x: this.bodies.myPaddle.position.x, y: e.mouse.position.y });
+            console.log(this.bodies.myPaddle)
+            this.socket?.emit(this.paddleSide, { x: this.bodies.myPaddle.position.x, y: e.mouse.position.y })
 
         })
 
@@ -126,13 +159,31 @@ export class matterJsModules {
         this.modules.Runner.run(this.objects.runner, this.objects.engine);
     }
 
-    socketStuff(){
+    socketStuff() {
         this.socket.on('ballPosition', (data) => {
             // Update the ball's position
             this.bodies.ball.position.x = data.x;
             this.bodies.ball.position.y = data.y;
-          });
+        });
+
+
     }
+
+    updateOtherPaddle() {
+        if (this.paddleSide.length > 1) {
+            // Update the other's paddle position
+            if (this.paddleSide == "left")
+                this.socket.on("right", (data) => {
+                    this.modules.Body.setPosition(this.bodies.othersPaddle, { x: data.x, y: data.y });
+                });
+            else
+                this.socket.on("left", (data) => {
+                    this.modules.Body.setPosition(this.bodies.othersPaddle, { x: data.x, y: data.y });
+                });
+
+        }
+    }
+
 
 
 }
