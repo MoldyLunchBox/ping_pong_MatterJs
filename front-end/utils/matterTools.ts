@@ -40,6 +40,7 @@ export class matterJsModules {
     paddleSide: string = ""
     constructor() {
         this.socket = io('http://localhost:3008');
+        this.socket.emit('joinRoom', { roomId: 'room1' });
 
         this.modules = {
             Engine: Matter.Engine,

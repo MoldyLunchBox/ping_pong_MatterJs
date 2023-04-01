@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { Inter } from 'next/font/google'
 import styles from '@/styles/Home.module.css'
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import io, { Socket } from "socket.io-client"
 import engine from "../modules/Engine";
 import Matter, { Events, Engine, World, Bodies } from "matter-js";
@@ -12,6 +12,11 @@ import { matterJsModules } from "../utils/matterTools"
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
+  const [joinRoom, setJoinRoom] = useState<boolean>(false)
+  const [roomName, setRoomName] = useState<string>("")
+  const handleRoomName = (e: any) => {
+    setRoomName(e.target.value)
+  }
   useEffect(() => {
     const MatterNode = new matterJsModules()
     MatterNode.createModules()
@@ -19,10 +24,20 @@ export default function Home() {
     MatterNode.events()
     MatterNode.run()
     MatterNode.socketStuff()
-    
+
 
 
   }, []);
+  const runMatterJs = () => {
+    setJoinRoom(true)
+    const MatterNode = new matterJsModules()
+    MatterNode.createModules()
+    MatterNode.createBodies()
+    MatterNode.events()
+    MatterNode.run()
+    MatterNode.socketStuff()
+
+  }
   return (
     <>
       <Head>
@@ -31,7 +46,21 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main>
+      <main>{`${joinRoom}`}
+        {joinRoom &&
+          <div className="relative flex h-screen w-screen flex-col bg-black md:items-center
+        md:justify-center md:bg-transparent">
+            <label className="text-lg">Room ID</label>
+            <div className="border ">
+              <input className="pl-1" onChange={handleRoomName} value={roomName} type="text" />
+              <button className="bg-green-700 px-1" onClick={runMatterJs}> Join</button>
+            </div>
+          </div>
+        }
+     
+        <div>
+
+        </div>
 
       </main>
     </>
