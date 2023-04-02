@@ -1,4 +1,4 @@
-import { WebSocketGateway, WebSocketServer, OnGatewayInit, SubscribeMessage, MessageBody } from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer, OnGatewayInit, ConnectedSocket, SubscribeMessage, MessageBody } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Body, Engine, World, Bodies } from 'matter-js';
 import WebSocket from 'ws';
@@ -14,7 +14,9 @@ class matterNode {
     private paddles: {}
     private availablePaddles = ['left', 'right']; // List of available paddles
     private server: any
-    constructor(server: any) {
+    private roomId: string
+    constructor(server: any, roomId: string) {
+        this.roomId = roomId
         this.server = server;
         this.engine = Engine.create();
         this.world = this.engine.world;
@@ -62,7 +64,7 @@ class matterNode {
 
     sendBallPosition() {
         setInterval(() => {
-            this.server.emit('ballPosition', { x: this.ball.position.x, y: this.ball.position.y });
+            this.server.to(this.roomId).emit('ballPosition', { x: this.ball.position.x, y: this.ball.position.y });
 
 
         }, 1000 / 60);
@@ -73,12 +75,13 @@ class matterNode {
         if (availablePaddle) {
             client.emit('paddleAssigned', availablePaddle); // Send the paddle assignment to the client
             client.data.paddle = availablePaddle; // Set the paddle assignment to the client
+
             client.on(availablePaddle, (data: WebSocket.Data) => {
-                // console.log(`Received message from client`);
+                console.log(`Received message from client`);
                 console.log(availablePaddle, data.x)
 
                 Body.setPosition(this.paddles[availablePaddle], { x: data.x, y: data.y });
-                this.server.emit(availablePaddle, { x: data.x, y: data.y }); // Send the paddle assignment to the client
+                this.server.to(this.roomId).emit(availablePaddle, { x: data.x, y: data.y }); // Send the paddle assignment to the client
 
             });
         } else {
@@ -94,7 +97,7 @@ class matterNode {
         console.log("user left and his paddle is:", client.data.paddle)
         this.availablePaddles.push(client.data.paddle)
         console.log(this.availablePaddles)
-      }
+    }
 
 }
 
@@ -102,24 +105,44 @@ class matterNode {
 @WebSocketGateway(3008, { cors: "*" })
 export class GameGateway implements OnGatewayInit {
     @WebSocketServer() server;
-    private MatterNode: matterNode
+    private worlds = {};
+    private world: matterNode
     constructor() { }
     afterInit() {
-        console.log("server")
-        console.log(this.server)
-        this.MatterNode = new matterNode(this.server)
-        this.MatterNode.sendBallPosition()
+        this.worlds = {};
+        //     console.log("server")
+        //     console.log(this.server)
+        //     this.MatterNode = new matterNode(this.server)
+        //     this.MatterNode.sendBallPosition()
+
+    }
+    @SubscribeMessage('joinRoom')
+
+    handleJoinRoom(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {
+        const { roomId } = data;
+        console.log("user joined room", roomId)
+        if (!this.worlds[roomId]) {
+            this.world = new matterNode(this.server, roomId);
+            this.worlds[roomId] = this.world
+        }
+        else
+            this.world = this.worlds[roomId];
+
+        client.join(roomId); // add the client to the specified room
+        this.world.handleConnection(client)
+        this.world.sendBallPosition()
+
     }
 
     handleConnection(client: Socket) {
-        this.MatterNode.handleConnection(client);
+        console.log("user connected handle connection")
     }
     @SubscribeMessage('paddle')
     setPaddlePosition(@MessageBody() data: { x: string, y: string }): void {
-        this.MatterNode.setPaddlePosition(data)
+        this.world.setPaddlePosition(data)
     }
     handleDisconnect(client: Socket) {
-        this.MatterNode.handleDisconnect(client);
+        this.world.handleDisconnect(client);
     }
 
 }
