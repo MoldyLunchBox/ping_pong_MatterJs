@@ -31,17 +31,36 @@ interface MatterBodies {
     wall: Matter.Body
     wallLeft: Matter.Body
 }
-
+interface measurements{
+    divHeight: number,
+    divWidth: number,
+    wallBottom:{ x: number, y: number, width: number, height: number },
+    wallTop:{ x: number, y: number, width: number, height: number },
+    wallLeft:{ x: number, y: number, width: number, height: number },
+    wallRight:{ x: number, y: number, width: number, height: number },
+}
+// function saveMeasurements(div: HTMLElement, obj: measurements){
+//     obj = {
+//         divHeight: div.clientHeight,
+//         divWidth: div.clientWidth,
+//         wallBottom: {x: div.clientWidth / 2, y : div.clientHeight, width: div.clientWidth, height: 20},
+//         wallTop: {x: div.clientWidth / 2, y : 0, width: div.clientWidth, height: 20},
+//         wallLeft: {x: 0, y : div.clientHeight / 2, width: 20, height: div.clientHeight},
+//         wallRight: {x: div.clientWidth , y : div.clientHeight / 2, width: 20, height: div.clientHeight},
+//     }
+// }
 export class matterJsModules {
     socket: Socket
     modules: MatterModules;
     objects: MatterObjects = { engine: null, render: null, runner: null, mouse: null, mouseConstraint: null };
     bodies: MatterBodies
     paddleSide: string = ""
-    constructor() {
+    matterContainer = document.querySelector("#matter-Container") as HTMLElement
+    obj: measurements
+    constructor(roomId: string) {
         this.socket = io('http://localhost:3008');
-        this.socket.emit('joinRoom', { roomId: 'room1' });
-
+        this.obj = this.saveMeasurements(this.matterContainer)
+        this.socket.emit('joinRoom', { roomId: roomId , obj: this.obj } );
         this.modules = {
             Engine: Matter.Engine,
             Render: Matter.Render,
@@ -67,25 +86,25 @@ export class matterJsModules {
             }),
             myPaddle: this.modules.Bodies.rectangle(0, 0, 0, 0, { isStatic: true }),
             othersPaddle: this.modules.Bodies.rectangle(0, 0, 0, 0, { isStatic: true }),
-            ground: this.modules.Bodies.rectangle(500, 0, 1000, 20, {
+            roof: this.modules.Bodies.rectangle(this.obj.wallTop.x, this.obj.wallTop.y, this.obj.wallTop.width, this.obj.wallTop.height,{
                 isStatic: true,
                 render: {
                     fillStyle: 'blue'
                 }
             }),
-            roof: this.modules.Bodies.rectangle(500, 600, 1000, 20, {
+            ground: this.modules.Bodies.rectangle(this.obj.wallBottom.x, this.obj.wallBottom.y, this.obj.wallBottom.width, this.obj.wallBottom.height, {
                 isStatic: true,
                 render: {
                     fillStyle: 'red'
                 }
             }),
-            wall: this.modules.Bodies.rectangle(1000, 300, 20, 1000, {
+            wall: this.modules.Bodies.rectangle(this.obj.wallRight.x, this.obj.wallRight.y, this.obj.wallRight.width, this.obj.wallRight.height, {
                 isStatic: true,
                 render: {
                     fillStyle: 'green'
                 }
             }),
-            wallLeft: this.modules.Bodies.rectangle(0, 300, 20, 1000, {
+            wallLeft: this.modules.Bodies.rectangle(this.obj.wallLeft.x, this.obj.wallLeft.y, this.obj.wallLeft.width, this.obj.wallLeft.height, {
                 isStatic: true,
                 render: {
                     fillStyle: 'green'
@@ -110,30 +129,71 @@ export class matterJsModules {
         })
 
     }
-    createModules() {
-        this.objects.engine = this.modules.Engine.create(),
-            this.objects.render = this.modules.Render.create({
-                element: document.body,
-                engine: this.objects.engine,
-                options: {
-                    background: "transparent",
-                    wireframes: false,
-                    width: 1000,
-                    height: 600,
-                }
-            }),
-            this.objects.runner = this.modules.Runner.create(),
-            this.objects.mouse = this.modules.Mouse.create(this.objects.render.canvas),
-            this.objects.mouseConstraint = this.modules.MouseConstraint.create(this.objects.engine, {
-                mouse: this.objects.mouse,
-                constraint: {
-                    stiffness: 0.2,
-                    render: {
-                        visible: false
-                    }
-                }
-            })
+
+    saveMeasurements(div: HTMLElement){
+        console.log(div.clientHeight)
+        const obj = {
+            divHeight: div.clientHeight,
+            divWidth: div.clientWidth,
+            wallBottom: {x: div.clientWidth / 2, y : div.clientHeight, width: div.clientWidth, height: 20},
+            wallTop: {x: div.clientWidth / 2, y : 0, width: div.clientWidth, height: 20},
+            wallLeft: {x: 0, y : div.clientHeight / 2, width: 20, height: div.clientHeight},
+            wallRight: {x: div.clientWidth , y : div.clientHeight / 2, width: 20, height: div.clientHeight},
+        }
+        return obj
     }
+    createModules() {
+    if (this.matterContainer){
+
+        this.objects.engine = this.modules.Engine.create();
+        this.objects.render = this.modules.Render.create({
+            element: this.matterContainer,
+            engine: this.objects.engine,
+            options: {
+                background: "transparent",
+                wireframes: false,
+                showAngleIndicator: true,
+                width: this.matterContainer.clientWidth,
+                height: this.matterContainer.clientHeight,
+            }
+        }),
+        this.objects.runner = this.modules.Runner.create(),
+        this.objects.mouse = this.modules.Mouse.create(this.objects.render.canvas),
+        this.objects.mouseConstraint = this.modules.MouseConstraint.create(this.objects.engine, {
+            mouse: this.objects.mouse,
+            constraint: {
+                stiffness: 0.2,
+                render: {
+                    visible: false
+                }
+            }
+        })
+    }
+}
+    // createModules() {
+    //     this.objects.engine = this.modules.Engine.create(),
+    //         this.objects.render = this.modules.Render.create({
+    //             element: document.body,
+    //             engine: this.objects.engine,
+    //             options: {
+    //                 background: "transparent",
+    //                 wireframes: false,
+    //                 width: 1000,
+    //                 height: 600,
+    //             }
+    //         }),
+    //         this.objects.runner = this.modules.Runner.create(),
+    //         this.objects.mouse = this.modules.Mouse.create(this.objects.render.canvas),
+    //         this.objects.mouseConstraint = this.modules.MouseConstraint.create(this.objects.engine, {
+    //             mouse: this.objects.mouse,
+    //             constraint: {
+    //                 stiffness: 0.2,
+    //                 render: {
+    //                     visible: false
+    //                 }
+    //             }
+    //         })
+    // }
 
     createBodies() {
 
@@ -188,3 +248,36 @@ export class matterJsModules {
 
 
 }
+
+
+
+
+// createModules() {
+//     const matterContainer = document.querySelector("#matter-Container") as HTMLElement
+//     if (matterContainer){
+
+//         this.objects.engine = this.modules.Engine.create();
+//         this.objects.render = this.modules.Render.create({
+//             element: matterContainer,
+//             engine: this.objects.engine,
+//             options: {
+//                 background: "transparent",
+//                 wireframes: true,
+//                 showAngleIndicator: true,
+//                 width: matterContainer.clientWidth,
+//                 height: matterContainer.clientHeight,
+//             }
+//         }),
+//         this.objects.runner = this.modules.Runner.create(),
+//         this.objects.mouse = this.modules.Mouse.create(this.objects.render.canvas),
+//         this.objects.mouseConstraint = this.modules.MouseConstraint.create(this.objects.engine, {
+//             mouse: this.objects.mouse,
+//             constraint: {
+//                 stiffness: 0.2,
+//                 render: {
+//                     visible: false
+//                 }
+//             }
+//         })
+//     }
+// }

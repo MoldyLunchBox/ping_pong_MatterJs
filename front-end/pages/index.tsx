@@ -17,20 +17,20 @@ export default function Home() {
   const handleRoomName = (e: any) => {
     setRoomName(e.target.value)
   }
-  useEffect(() => {
-    const MatterNode = new matterJsModules()
-    MatterNode.createModules()
-    MatterNode.createBodies()
-    MatterNode.events()
-    MatterNode.run()
-    MatterNode.socketStuff()
+  // useEffect(() => {
+  //   const MatterNode = new matterJsModules()
+  //   MatterNode.createModules()
+  //   MatterNode.createBodies()
+  //   MatterNode.events()
+  //   MatterNode.run()
+  //   MatterNode.socketStuff()
 
 
 
-  }, []);
+  // }, []);
   const runMatterJs = () => {
     setJoinRoom(true)
-    const MatterNode = new matterJsModules()
+    const MatterNode = new matterJsModules(roomName)
     MatterNode.createModules()
     MatterNode.createBodies()
     MatterNode.events()
@@ -46,9 +46,10 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main>{`${joinRoom}`}
-        {joinRoom &&
-          <div className="relative flex h-screen w-screen flex-col bg-black md:items-center
+      <main>
+      {
+!joinRoom &&
+        <div className="relative flex h-screen w-screen flex-col bg-black md:items-center
         md:justify-center md:bg-transparent">
             <label className="text-lg">Room ID</label>
             <div className="border ">
@@ -57,10 +58,9 @@ export default function Home() {
             </div>
           </div>
         }
+        
      
-        <div>
-
-        </div>
+        <div id="matter-Container" className="bg-black w-full h-[100vh]">  </div>
 
       </main>
     </>
