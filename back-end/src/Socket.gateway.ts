@@ -3,7 +3,14 @@ import { Server, Socket } from 'socket.io';
 import { Body, Engine, World, Bodies } from 'matter-js';
 import WebSocket from 'ws';
 
-
+interface measurements{
+    divHeight: number,
+    divWidth: number,
+    wallBottom:{ x: number, y: number, width: number, height: number },
+    wallTop:{ x: number, y: number, width: number, height: number },
+    wallLeft:{ x: number, y: number, width: number, height: number },
+    wallRight:{ x: number, y: number, width: number, height: number },
+}
 
 class matterNode {
     private engine: Engine;
@@ -11,13 +18,15 @@ class matterNode {
     private ball: any;
     private leftPaddle: any;
     private rightPaddle: any;
-    private paddles: {}
+    private paddles: {}  // contains the actual matter-js objects for the paddles
     private availablePaddles = ['left', 'right']; // List of available paddles
     private server: any
     private roomId: string
-    constructor(server: any, roomId: string) {
+    private obj: measurements  // window measurements, and positions of some objects
+    constructor(server: any, roomId: string, obj: measurements ) {
         this.roomId = roomId
         this.server = server;
+        this.obj = obj
         this.engine = Engine.create();
         this.world = this.engine.world;
         this.engine.gravity = {
@@ -26,16 +35,16 @@ class matterNode {
             scale: 0
         };
         this.ball = Bodies.circle(100, 100, 20, { restitution: 1.01, friction: 0, frictionAir: 0 });
-        this.leftPaddle = Bodies.rectangle(50, 300, 40, 200, { isStatic: true });
-        this.rightPaddle = Bodies.rectangle(1000 - 50, 300, 40, 200, { isStatic: true })
+        this.leftPaddle = Bodies.rectangle(50, this.obj.divHeight / 2, 40, 200, { isStatic: true });
+        this.rightPaddle = Bodies.rectangle(this.obj.divWidth - 50, this.obj.divHeight / 2, 40, 200, { isStatic: true })
         this.paddles = { left: this.leftPaddle, right: this.rightPaddle }
-        var ground = Bodies.rectangle(500, 0, 1000, 20, {
+        var roof = Bodies.rectangle(obj.wallTop.x, obj.wallTop.y, obj.wallTop.width, obj.wallTop.height, {
             isStatic: true,
             render: {
                 fillStyle: 'blue'
             }
         });
-        var wallLeft = Bodies.rectangle(0, 300, 20, 1000, {
+        var wallLeft = Bodies.rectangle(obj.wallLeft.x, obj.wallLeft.y, obj.wallLeft.width, obj.wallLeft.height, {
             isStatic: true,
             render: {
                 fillStyle: 'green'
@@ -43,13 +52,13 @@ class matterNode {
         });
         Body.setVelocity(this.ball, { x: 5, y: 5 });
 
-        var roof = Bodies.rectangle(500, 600, 1000, 20, {
+        var ground = Bodies.rectangle(obj.wallBottom.x, obj.wallBottom.y, obj.wallBottom.width, obj.wallBottom.height, {
             isStatic: true,
             render: {
                 fillStyle: 'red'
             }
         });
-        var wall = Bodies.rectangle(1000, 300, 20, 1000, {
+        var wall = Bodies.rectangle(obj.wallRight.x, obj.wallRight.y, obj.wallRight.width, obj.wallRight.height, {
             isStatic: true,
             render: {
                 fillStyle: 'green'
@@ -77,8 +86,6 @@ class matterNode {
             client.data.paddle = availablePaddle; // Set the paddle assignment to the client
 
             client.on(availablePaddle, (data: WebSocket.Data) => {
-                console.log(`Received message from client`);
-                console.log(availablePaddle, data.x)
 
                 Body.setPosition(this.paddles[availablePaddle], { x: data.x, y: data.y });
                 this.server.to(this.roomId).emit(availablePaddle, { x: data.x, y: data.y }); // Send the paddle assignment to the client
@@ -118,11 +125,11 @@ export class GameGateway implements OnGatewayInit {
     }
     @SubscribeMessage('joinRoom')
 
-    handleJoinRoom(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {
+    handleJoinRoom(@MessageBody() data: { roomId: string,  obj: measurements }, @ConnectedSocket() client: Socket) {
         const { roomId } = data;
-        console.log("user joined room", roomId)
+        console.log("user joined room", roomId, "and page height is", data)
         if (!this.worlds[roomId]) {
-            this.world = new matterNode(this.server, roomId);
+            this.world = new matterNode(this.server, roomId, data.obj);
             this.worlds[roomId] = this.world
         }
         else
