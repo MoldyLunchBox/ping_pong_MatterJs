@@ -12,31 +12,40 @@ import { matterJsModules } from "../utils/matterTools"
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
-  const [joinRoom, setJoinRoom] = useState<boolean>(false)
+  const [joinRoom, setJoinRoom] = useState<string>("hidden")
   const [roomName, setRoomName] = useState<string>("")
   const handleRoomName = (e: any) => {
     setRoomName(e.target.value)
   }
-  // useEffect(() => {
-  //   const MatterNode = new matterJsModules()
-  //   MatterNode.createModules()
-  //   MatterNode.createBodies()
-  //   MatterNode.events()
-  //   MatterNode.run()
-  //   MatterNode.socketStuff()
-
-
-
-  // }, []);
-  const runMatterJs = () => {
-    setJoinRoom(true)
+  useEffect(() => {
+    if (joinRoom == "go"){
     const MatterNode = new matterJsModules(roomName)
     MatterNode.createModules()
     MatterNode.createBodies()
     MatterNode.events()
     MatterNode.run()
     MatterNode.socketStuff()
-
+    const handleResize =()=> {
+      MatterNode.objects.render.canvas.width = MatterNode.matterContainer.clientWidth
+      MatterNode.objects.render.canvas.height = MatterNode.matterContainer.clientHeight
+     }
+     window.addEventListener('resize', handleResize);
+     return () => window.removeEventListener('resize', handleResize);}
+  }, []);
+  const runMatterJs = () => {
+    setJoinRoom("go")
+    const MatterNode = new matterJsModules(roomName)
+    MatterNode.createModules()
+    MatterNode.createBodies()
+    MatterNode.events()
+    MatterNode.run()
+    MatterNode.socketStuff()
+    function handleResize() {
+      MatterNode.objects.render.canvas.width = MatterNode.matterContainer.clientWidth
+      MatterNode.objects.render.canvas.height = MatterNode.matterContainer.clientHeight
+     }
+     window.addEventListener('resize', handleResize);
+     return () => window.removeEventListener('resize', handleResize);
   }
   return (
     <>
@@ -48,7 +57,7 @@ export default function Home() {
       </Head>
       <main>
       {
-!joinRoom &&
+joinRoom == "hidden" &&
         <div className="relative flex h-screen w-screen flex-col bg-black md:items-center
         md:justify-center md:bg-transparent">
             <label className="text-lg">Room ID</label>
@@ -58,9 +67,10 @@ export default function Home() {
             </div>
           </div>
         }
+        {
+      <div id="matter-Container" className={`w-full h-[75vh] ${!joinRoom && "hidden"}`}>  </div>}
         
      
-        <div id="matter-Container" className="bg-black w-full h-[100vh]">  </div>
 
       </main>
     </>

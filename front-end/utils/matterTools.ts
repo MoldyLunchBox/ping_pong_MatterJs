@@ -38,6 +38,9 @@ interface measurements{
     wallTop:{ x: number, y: number, width: number, height: number },
     wallLeft:{ x: number, y: number, width: number, height: number },
     wallRight:{ x: number, y: number, width: number, height: number },
+    leftPaddle:{ x: number, y: number, width: number, height: number },
+    rightPaddle:{ x: number, y: number, width: number, height: number },
+
 }
 // function saveMeasurements(div: HTMLElement, obj: measurements){
 //     obj = {
@@ -74,12 +77,12 @@ export class matterJsModules {
         this.bodies = {
             ball: this.modules.Bodies.circle(400, 200, 20),
 
-            leftPaddle: this.modules.Bodies.rectangle(50, 300, 40, 200, {
+            leftPaddle: this.modules.Bodies.rectangle(this.obj.leftPaddle.x, this.obj.leftPaddle.y, this.obj.leftPaddle.width, this.obj.leftPaddle.height, {
                 isStatic: true, render: {
                     fillStyle: 'green'
                 }
             }),
-            rightPaddle: this.modules.Bodies.rectangle(1000 - 50, 300, 40, 200, {
+            rightPaddle: this.modules.Bodies.rectangle(this.obj.rightPaddle.x, this.obj.rightPaddle.y, this.obj.rightPaddle.width, this.obj.rightPaddle.height, {
                 isStatic: true, render: {
                     fillStyle: 'red'
                 }
@@ -139,6 +142,9 @@ export class matterJsModules {
             wallTop: {x: div.clientWidth / 2, y : 0, width: div.clientWidth, height: 20},
             wallLeft: {x: 0, y : div.clientHeight / 2, width: 20, height: div.clientHeight},
             wallRight: {x: div.clientWidth , y : div.clientHeight / 2, width: 20, height: div.clientHeight},
+            leftPaddle: {x: 50 , y : div.clientHeight / 2, width: 40, height: 200},
+            rightPaddle: {x: div.clientWidth - 50 , y : div.clientHeight / 2, width: 40, height: 200},
+
         }
         return obj
     }
@@ -152,7 +158,7 @@ export class matterJsModules {
             options: {
                 background: "transparent",
                 wireframes: false,
-                showAngleIndicator: true,
+                showAngleIndicator: false,
                 width: this.matterContainer.clientWidth,
                 height: this.matterContainer.clientHeight,
             }
@@ -243,6 +249,10 @@ export class matterJsModules {
                 });
 
         }
+    }
+
+    responsivity(){
+        
     }
 
 

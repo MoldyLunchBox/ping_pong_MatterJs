@@ -10,6 +10,9 @@ interface measurements{
     wallTop:{ x: number, y: number, width: number, height: number },
     wallLeft:{ x: number, y: number, width: number, height: number },
     wallRight:{ x: number, y: number, width: number, height: number },
+    leftPaddle:{ x: number, y: number, width: number, height: number },
+    rightPaddle:{ x: number, y: number, width: number, height: number },
+
 }
 
 class matterNode {
@@ -35,8 +38,8 @@ class matterNode {
             scale: 0
         };
         this.ball = Bodies.circle(100, 100, 20, { restitution: 1.01, friction: 0, frictionAir: 0 });
-        this.leftPaddle = Bodies.rectangle(50, this.obj.divHeight / 2, 40, 200, { isStatic: true });
-        this.rightPaddle = Bodies.rectangle(this.obj.divWidth - 50, this.obj.divHeight / 2, 40, 200, { isStatic: true })
+        this.leftPaddle = Bodies.rectangle(this.obj.leftPaddle.x, this.obj.leftPaddle.y, this.obj.leftPaddle.width, this.obj.leftPaddle.height, { isStatic: true });
+        this.rightPaddle = Bodies.rectangle(this.obj.rightPaddle.x, this.obj.rightPaddle.y, this.obj.rightPaddle.width, this.obj.rightPaddle.height, { isStatic: true })
         this.paddles = { left: this.leftPaddle, right: this.rightPaddle }
         var roof = Bodies.rectangle(obj.wallTop.x, obj.wallTop.y, obj.wallTop.width, obj.wallTop.height, {
             isStatic: true,
@@ -98,16 +101,16 @@ class matterNode {
     }
     setPaddlePosition(data: { x: string, y: string }) {
         const { x, y } = data;
-        Body.setPosition(this.leftPaddle, { x: 60, y: y });
+        Body.setPosition(this.leftPaddle, { x: this.obj.leftPaddle.x, y: y });
     }
     handleDisconnect(client: Socket) {
         console.log("user left and his paddle is:", client.data.paddle)
+        if (client.data !== undefined)
         this.availablePaddles.push(client.data.paddle)
         console.log(this.availablePaddles)
     }
 
 }
-
 
 @WebSocketGateway(3008, { cors: "*" })
 export class GameGateway implements OnGatewayInit {
@@ -142,14 +145,12 @@ export class GameGateway implements OnGatewayInit {
     }
 
     handleConnection(client: Socket) {
-        console.log("user connected handle connection")
+        console.log("user connected handle connection.")
     }
-    @SubscribeMessage('paddle')
-    setPaddlePosition(@MessageBody() data: { x: string, y: string }): void {
-        this.world.setPaddlePosition(data)
-    }
+
     handleDisconnect(client: Socket) {
-        this.world.handleDisconnect(client);
+        console.log(this.world)
+        this.world?.handleDisconnect(client);
     }
 
 }
