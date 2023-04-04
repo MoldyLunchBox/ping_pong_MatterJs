@@ -229,8 +229,13 @@ export class matterJsModules {
     socketStuff() {
         this.socket.on('ballPosition', (data) => {
             // Update the ball's position
-            this.bodies.ball.position.x = data.x;
-            this.bodies.ball.position.y = data.y;
+            this.bodies.ball.position.x = data.x 
+            this.bodies.ball.position.y = data.y 
+            console.log(data.x, this.bodies.ball.position.x)
+            console.log(data.y, this.bodies.ball.position.y)
+            console.log(this.obj.divWidth)
+            console.log(this.obj.divHeight)
+
         });
 
 
@@ -241,11 +246,11 @@ export class matterJsModules {
             // Update the other's paddle position
             if (this.paddleSide == "left")
                 this.socket.on("right", (data) => {
-                    this.modules.Body.setPosition(this.bodies.othersPaddle, { x: data.x, y: data.y });
+                    this.modules.Body.setPosition(this.bodies.othersPaddle, { x: this.obj.divWidth * data.x / 1000, y: this.obj.divHeight * data.y / 1000 });
                 });
             else
                 this.socket.on("left", (data) => {
-                    this.modules.Body.setPosition(this.bodies.othersPaddle, { x: data.x, y: data.y });
+                    this.modules.Body.setPosition(this.bodies.othersPaddle, { x: this.obj.divWidth * data.x / 1000, y: this.obj.divHeight * data.y / 1000 });
                 });
 
         }

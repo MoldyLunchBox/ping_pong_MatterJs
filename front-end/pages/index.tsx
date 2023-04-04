@@ -68,7 +68,7 @@ joinRoom == "hidden" &&
           </div>
         }
         {
-      <div id="matter-Container" className={`w-full h-[75vh] ${!joinRoom && "hidden"}`}>  </div>}
+      <div id="matter-Container" className={`h-[500px] w-[1000px]  ${!joinRoom && "hidden"}`}>  </div>}
         
      
 

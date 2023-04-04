@@ -26,10 +26,25 @@ class matterNode {
     private server: any
     private roomId: string
     private obj: measurements  // window measurements, and positions of some objects
+    translateCords(){
+       this.obj = { 
+        divHeight: this.obj.divHeight,
+        divWidth: this.obj.divWidth,
+        wallBottom:{ x: 1000 * this.obj.wallBottom.x / this.obj.divWidth, y: 1000 * this.obj.wallBottom.y / this.obj.divHeight, width: 1000 * this.obj.wallBottom.width / this.obj.divWidth, height: 1000 * this.obj.wallBottom.height / this.obj.divHeight },
+        wallTop:{ x: 1000 * this.obj.wallTop.x / this.obj.divWidth, y: 1000 * this.obj.wallTop.y / this.obj.divHeight, width: 1000 * this.obj.wallTop.width / this.obj.divWidth, height: 1000 * this.obj.wallTop.height / this.obj.divHeight },
+        wallLeft:{ x: 1000 * this.obj.wallLeft.x / this.obj.divWidth, y: 1000 * this.obj.wallLeft.y / this.obj.divHeight, width: 1000 * this.obj.wallLeft.width / this.obj.divWidth, height: 1000 * this.obj.wallLeft.height / this.obj.divHeight },
+        wallRight:{ x: 1000 * this.obj.wallRight.x / this.obj.divWidth, y: 1000 * this.obj.wallRight.y / this.obj.divHeight, width: 1000 * this.obj.wallRight.width / this.obj.divWidth, height: 1000 * this.obj.wallRight.height / this.obj.divHeight },
+        leftPaddle:{ x: 1000 * this.obj.leftPaddle.x / this.obj.divWidth, y: 1000 * this.obj.leftPaddle.y / this.obj.divHeight, width: 1000 * this.obj.leftPaddle.width / this.obj.divWidth, height: 1000 * this.obj.leftPaddle.height / this.obj.divHeight },
+        rightPaddle:{ x: 1000 * this.obj.rightPaddle.x / this.obj.divWidth, y: 1000 * this.obj.rightPaddle.y / this.obj.divHeight, width: 1000 * this.obj.rightPaddle.width / this.obj.divWidth, height: 1000 * this.obj.rightPaddle.height / this.obj.divHeight },
+       }
+    }
     constructor(server: any, roomId: string, obj: measurements ) {
         this.roomId = roomId
         this.server = server;
+        // cords and measurements of objects
         this.obj = obj
+        this.translateCords() // translate the cords from frontend screen to backend screen
+        console.log(this.obj)
         this.engine = Engine.create();
         this.world = this.engine.world;
         this.engine.gravity = {
@@ -90,25 +105,23 @@ class matterNode {
 
             client.on(availablePaddle, (data: WebSocket.Data) => {
 
-                Body.setPosition(this.paddles[availablePaddle], { x: data.x, y: data.y });
-                this.server.to(this.roomId).emit(availablePaddle, { x: data.x, y: data.y }); // Send the paddle assignment to the client
-
+                Body.setPosition(this.paddles[availablePaddle], { x: 1000 * data.x / this.obj.divWidth, y: 1000 * data.y / this.obj.divHeight });
+                // Send the paddle assignment to the client
+                this.server.to(this.roomId).emit(availablePaddle, { x: 1000 * data.x / this.obj.divWidth, y: 1000 * data.y / this.obj.divHeight }); 
             });
         } else {
             console.log("joining user  forced to disconnect")
             client.disconnect(); // No available paddles, disconnect the user
         }
     }
-    setPaddlePosition(data: { x: string, y: string }) {
-        const { x, y } = data;
-        Body.setPosition(this.leftPaddle, { x: this.obj.leftPaddle.x, y: y });
-    }
+
     handleDisconnect(client: Socket) {
         console.log("user left and his paddle is:", client.data.paddle)
         if (client.data !== undefined)
         this.availablePaddles.push(client.data.paddle)
         console.log(this.availablePaddles)
     }
+
 
 }
 
