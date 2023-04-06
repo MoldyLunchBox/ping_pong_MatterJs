@@ -18,19 +18,6 @@ export default function Home() {
     setRoomName(e.target.value)
   }
   useEffect(() => {
-    if (joinRoom == "go"){
-    const MatterNode = new matterJsModules(roomName)
-    MatterNode.createModules()
-    MatterNode.createBodies()
-    MatterNode.events()
-    MatterNode.run()
-    MatterNode.socketStuff()
-    const handleResize =()=> {
-      MatterNode.objects.render.canvas.width = MatterNode.matterContainer.clientWidth
-      MatterNode.objects.render.canvas.height = MatterNode.matterContainer.clientHeight
-     }
-     window.addEventListener('resize', handleResize);
-     return () => window.removeEventListener('resize', handleResize);}
   }, []);
   const runMatterJs = () => {
     setJoinRoom("go")
@@ -41,8 +28,9 @@ export default function Home() {
     MatterNode.run()
     MatterNode.socketStuff()
     function handleResize() {
-      MatterNode.objects.render.canvas.width = MatterNode.matterContainer.clientWidth
-      MatterNode.objects.render.canvas.height = MatterNode.matterContainer.clientHeight
+      var oldscreen = { w : MatterNode.objects.render.canvas.width, h : MatterNode.objects.render.canvas.height}
+      var newScreen = { w: MatterNode.matterContainer.clientWidth, h : MatterNode.matterContainer.clientHeight }
+      MatterNode.responsivity(oldscreen, newScreen)
      }
      window.addEventListener('resize', handleResize);
      return () => window.removeEventListener('resize', handleResize);
@@ -68,7 +56,7 @@ joinRoom == "hidden" &&
           </div>
         }
         {
-      <div id="matter-Container" className={`h-[500px] w-[1000px]  ${!joinRoom && "hidden"}`}>  </div>}
+      <div id="matter-Container" className={`h-[75vh] w-full  ${!joinRoom && "hidden"}`}>  </div>}
         
      
 

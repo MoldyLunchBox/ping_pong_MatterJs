@@ -1,6 +1,6 @@
 import { WebSocketGateway, WebSocketServer, OnGatewayInit, ConnectedSocket, SubscribeMessage, MessageBody } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Body, Engine, World, Bodies } from 'matter-js';
+import { Body, Engine, World, Bodies, Composite } from 'matter-js';
 import WebSocket from 'ws';
 
 interface measurements{
@@ -43,7 +43,9 @@ class matterNode {
         this.server = server;
         // cords and measurements of objects
         this.obj = obj
+        console.log(obj)
         this.translateCords() // translate the cords from frontend screen to backend screen
+        obj = this.obj
         console.log(this.obj)
         this.engine = Engine.create();
         this.world = this.engine.world;
@@ -52,7 +54,7 @@ class matterNode {
             y: 0,
             scale: 0
         };
-        this.ball = Bodies.circle(100, 100, 20, { restitution: 1.01, friction: 0, frictionAir: 0 });
+        this.ball = Bodies.circle(500, 500, 20, { restitution: 1.01, friction: 0, frictionAir: 0 });
         this.leftPaddle = Bodies.rectangle(this.obj.leftPaddle.x, this.obj.leftPaddle.y, this.obj.leftPaddle.width, this.obj.leftPaddle.height, { isStatic: true });
         this.rightPaddle = Bodies.rectangle(this.obj.rightPaddle.x, this.obj.rightPaddle.y, this.obj.rightPaddle.width, this.obj.rightPaddle.height, { isStatic: true })
         this.paddles = { left: this.leftPaddle, right: this.rightPaddle }
@@ -63,12 +65,13 @@ class matterNode {
             }
         });
         var wallLeft = Bodies.rectangle(obj.wallLeft.x, obj.wallLeft.y, obj.wallLeft.width, obj.wallLeft.height, {
+            label:"leftwall",
             isStatic: true,
             render: {
                 fillStyle: 'green'
             }
         });
-        Body.setVelocity(this.ball, { x: 5, y: 5 });
+        Body.setVelocity(this.ball, { x: 5, y: 0 });
 
         var ground = Bodies.rectangle(obj.wallBottom.x, obj.wallBottom.y, obj.wallBottom.width, obj.wallBottom.height, {
             isStatic: true,
@@ -104,11 +107,45 @@ class matterNode {
             client.data.paddle = availablePaddle; // Set the paddle assignment to the client
 
             client.on(availablePaddle, (data: WebSocket.Data) => {
+                
+                console.log("screen wid:", this.obj.divWidth, "          screen height: " + this.obj.divHeight )
+                console.log("paddle y before:", data.y)
+                console.log("paddle y:",1000 * data.y / this.obj.divHeight)
+                console.log("bounds:", this.world.bodies[4].bounds)
+                console.log("ball y:",this.ball.position.y, "\n\n")
+                console.log("ball x:",this.ball.position.x, "\n\n")
 
                 Body.setPosition(this.paddles[availablePaddle], { x: 1000 * data.x / this.obj.divWidth, y: 1000 * data.y / this.obj.divHeight });
                 // Send the paddle assignment to the client
                 this.server.to(this.roomId).emit(availablePaddle, { x: 1000 * data.x / this.obj.divWidth, y: 1000 * data.y / this.obj.divHeight }); 
             });
+            client.on("mouseUp", (data: WebSocket.Data) => {
+                Body.setPosition(this.paddles[availablePaddle], { x: 1000 * data.x / this.obj.divWidth, y: 1000 * data.y / this.obj.divHeight });
+                // Send the paddle assignment to the client
+                Body.setVelocity(this.ball, { x: 5, y:0});
+
+                this.server.to(this.roomId).emit(availablePaddle, { x: 1000 * data.x / this.obj.divWidth, y: 1000 * data.y / this.obj.divHeight }); 
+            });
+            client.on("windowResize", (data: {newScreen: { w: number, h: number }}) => {
+                const {newScreen} = data
+                var  scaleX = newScreen.w / 1000
+                var  scaleY = newScreen.h / 1000;
+                Composite.allBodies(this.engine.world).forEach(function(body) {
+                    // Update dimensions
+                    console.log(body.label)
+                    var  scaleX = newScreen.w / 1000
+                    var  scaleY = newScreen.h / 1000;
+                    if (body.label !== "ball")
+                    Body.scale(body, scaleX, scaleY);
+                    // Update position
+                    var newPosition = {
+                      x: body.position.x * scaleX,
+                      y: body.position.y * scaleY
+                    };
+                    console.log()
+                    Body.setPosition(body, newPosition);
+                  });
+              });
         } else {
             console.log("joining user  forced to disconnect")
             client.disconnect(); // No available paddles, disconnect the user
@@ -139,6 +176,8 @@ export class GameGateway implements OnGatewayInit {
         //     this.MatterNode.sendBallPosition()
 
     }
+
+  
     @SubscribeMessage('joinRoom')
 
     handleJoinRoom(@MessageBody() data: { roomId: string,  obj: measurements }, @ConnectedSocket() client: Socket) {
