@@ -6,6 +6,7 @@ import WebSocket from 'ws';
 interface measurements{
     divHeight: number,
     divWidth: number,
+    ball:{ x: number, y: number, radius: number},
     wallBottom:{ x: number, y: number, width: number, height: number },
     wallTop:{ x: number, y: number, width: number, height: number },
     wallLeft:{ x: number, y: number, width: number, height: number },
@@ -14,8 +15,14 @@ interface measurements{
     rightPaddle:{ x: number, y: number, width: number, height: number },
 
 }
+interface aspectRatio{
+    w: number
+    h: number
+    ratio: number
+}
 
 class matterNode {
+    private aspectRatio: aspectRatio;
     private engine: Engine;
     private world: World;
     private ball: any;
@@ -30,15 +37,21 @@ class matterNode {
        this.obj = { 
         divHeight: this.obj.divHeight,
         divWidth: this.obj.divWidth,
-        wallBottom:{ x: 1000 * this.obj.wallBottom.x / this.obj.divWidth, y: 1000 * this.obj.wallBottom.y / this.obj.divHeight, width: 1000 * this.obj.wallBottom.width / this.obj.divWidth, height: 1000 * this.obj.wallBottom.height / this.obj.divHeight },
-        wallTop:{ x: 1000 * this.obj.wallTop.x / this.obj.divWidth, y: 1000 * this.obj.wallTop.y / this.obj.divHeight, width: 1000 * this.obj.wallTop.width / this.obj.divWidth, height: 1000 * this.obj.wallTop.height / this.obj.divHeight },
-        wallLeft:{ x: 1000 * this.obj.wallLeft.x / this.obj.divWidth, y: 1000 * this.obj.wallLeft.y / this.obj.divHeight, width: 1000 * this.obj.wallLeft.width / this.obj.divWidth, height: 1000 * this.obj.wallLeft.height / this.obj.divHeight },
-        wallRight:{ x: 1000 * this.obj.wallRight.x / this.obj.divWidth, y: 1000 * this.obj.wallRight.y / this.obj.divHeight, width: 1000 * this.obj.wallRight.width / this.obj.divWidth, height: 1000 * this.obj.wallRight.height / this.obj.divHeight },
-        leftPaddle:{ x: 1000 * this.obj.leftPaddle.x / this.obj.divWidth, y: 1000 * this.obj.leftPaddle.y / this.obj.divHeight, width: 1000 * this.obj.leftPaddle.width / this.obj.divWidth, height: 1000 * this.obj.leftPaddle.height / this.obj.divHeight },
-        rightPaddle:{ x: 1000 * this.obj.rightPaddle.x / this.obj.divWidth, y: 1000 * this.obj.rightPaddle.y / this.obj.divHeight, width: 1000 * this.obj.rightPaddle.width / this.obj.divWidth, height: 1000 * this.obj.rightPaddle.height / this.obj.divHeight },
+        ball:{ x: this.aspectRatio.w * this.obj.ball.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.ball.y / this.obj.divHeight, radius: 20},
+        wallBottom:{ x: this.aspectRatio.w * this.obj.wallBottom.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.wallBottom.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.wallBottom.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.wallBottom.height / this.obj.divHeight },
+        wallTop:{ x: this.aspectRatio.w * this.obj.wallTop.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.wallTop.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.wallTop.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.wallTop.height / this.obj.divHeight },
+        wallLeft:{ x: this.aspectRatio.w * this.obj.wallLeft.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.wallLeft.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.wallLeft.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.wallLeft.height / this.obj.divHeight },
+        wallRight:{ x: this.aspectRatio.w * this.obj.wallRight.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.wallRight.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.wallRight.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.wallRight.height / this.obj.divHeight },
+        leftPaddle:{ x: this.aspectRatio.w * this.obj.leftPaddle.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.leftPaddle.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.leftPaddle.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.leftPaddle.height / this.obj.divHeight },
+        rightPaddle:{ x: this.aspectRatio.w * this.obj.rightPaddle.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.rightPaddle.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.rightPaddle.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.rightPaddle.height / this.obj.divHeight },
        }
     }
     constructor(server: any, roomId: string, obj: measurements ) {
+        this.aspectRatio = {
+            w: 375,
+            h: 667,
+            ratio: 16/9,
+        }
         this.roomId = roomId
         this.server = server;
         // cords and measurements of objects
@@ -54,9 +67,9 @@ class matterNode {
             y: 0,
             scale: 0
         };
-        this.ball = Bodies.circle(500, 500, 20, { restitution: 1.01, friction: 0, frictionAir: 0 });
-        this.leftPaddle = Bodies.rectangle(this.obj.leftPaddle.x, this.obj.leftPaddle.y, this.obj.leftPaddle.width, this.obj.leftPaddle.height, { isStatic: true });
-        this.rightPaddle = Bodies.rectangle(this.obj.rightPaddle.x, this.obj.rightPaddle.y, this.obj.rightPaddle.width, this.obj.rightPaddle.height, { isStatic: true })
+        this.ball = Bodies.circle(this.obj.ball.x, this.obj.ball.y, this.obj.ball.radius, { label: "ball", restitution: 1.05, friction: 0, frictionAir: 0, density: 0.1 });
+        this.leftPaddle = Bodies.rectangle(this.obj.leftPaddle.x, this.obj.leftPaddle.y, this.obj.leftPaddle.width, this.obj.leftPaddle.height, { label: "leftPaddle", isStatic: true });
+        this.rightPaddle = Bodies.rectangle(this.obj.rightPaddle.x, this.obj.rightPaddle.y, this.obj.rightPaddle.width, this.obj.rightPaddle.height, {label: "rightPaddle", isStatic: true })
         this.paddles = { left: this.leftPaddle, right: this.rightPaddle }
         var roof = Bodies.rectangle(obj.wallTop.x, obj.wallTop.y, obj.wallTop.width, obj.wallTop.height, {
             isStatic: true,
@@ -71,7 +84,7 @@ class matterNode {
                 fillStyle: 'green'
             }
         });
-        Body.setVelocity(this.ball, { x: 5, y: 0 });
+        Body.setVelocity(this.ball, { x: 2, y: 5 });
 
         var ground = Bodies.rectangle(obj.wallBottom.x, obj.wallBottom.y, obj.wallBottom.width, obj.wallBottom.height, {
             isStatic: true,
@@ -94,7 +107,14 @@ class matterNode {
 
     sendBallPosition() {
         setInterval(() => {
+            console.log(this.availablePaddles[0])
+            if (this.availablePaddles.length ){
+                const availablePaddle = this.availablePaddles[0]
+                Body.setPosition(this.paddles[availablePaddle], { x: this.ball.position.x, y: this.paddles[availablePaddle].position.y });
+                this.server.to(this.roomId).emit(availablePaddle, { x: this.ball.position.x, y: this.paddles[availablePaddle].position.y }); 
+            }
             this.server.to(this.roomId).emit('ballPosition', { x: this.ball.position.x, y: this.ball.position.y });
+            // Send the paddle assignment to the client
 
 
         }, 1000 / 60);
@@ -105,47 +125,40 @@ class matterNode {
         if (availablePaddle) {
             client.emit('paddleAssigned', availablePaddle); // Send the paddle assignment to the client
             client.data.paddle = availablePaddle; // Set the paddle assignment to the client
-
             client.on(availablePaddle, (data: WebSocket.Data) => {
-                
-                console.log("screen wid:", this.obj.divWidth, "          screen height: " + this.obj.divHeight )
-                console.log("paddle y before:", data.y)
-                console.log("paddle y:",1000 * data.y / this.obj.divHeight)
-                console.log("bounds:", this.world.bodies[4].bounds)
-                console.log("ball y:",this.ball.position.y, "\n\n")
-                console.log("ball x:",this.ball.position.x, "\n\n")
-
-                Body.setPosition(this.paddles[availablePaddle], { x: 1000 * data.x / this.obj.divWidth, y: 1000 * data.y / this.obj.divHeight });
+                Body.setPosition(this.paddles[availablePaddle], { x: this.aspectRatio.w * data.x / this.obj.divWidth, y: this.aspectRatio.h * data.y / this.obj.divHeight });
                 // Send the paddle assignment to the client
-                this.server.to(this.roomId).emit(availablePaddle, { x: 1000 * data.x / this.obj.divWidth, y: 1000 * data.y / this.obj.divHeight }); 
+                this.server.to(this.roomId).emit(availablePaddle, { x: this.aspectRatio.w * data.x / this.obj.divWidth, y: this.aspectRatio.h * data.y / this.obj.divHeight }); 
             });
             client.on("mouseUp", (data: WebSocket.Data) => {
-                Body.setPosition(this.paddles[availablePaddle], { x: 1000 * data.x / this.obj.divWidth, y: 1000 * data.y / this.obj.divHeight });
+                Body.setPosition(this.paddles[availablePaddle], { x: this.aspectRatio.w * data.x / this.obj.divWidth, y: this.aspectRatio.h * data.y / this.obj.divHeight });
                 // Send the paddle assignment to the client
                 Body.setVelocity(this.ball, { x: 5, y:0});
-
-                this.server.to(this.roomId).emit(availablePaddle, { x: 1000 * data.x / this.obj.divWidth, y: 1000 * data.y / this.obj.divHeight }); 
+                this.server.to(this.roomId).emit(availablePaddle, { x: this.aspectRatio.w * data.x / this.obj.divWidth, y: this.aspectRatio.h * data.y / this.obj.divHeight }); 
             });
             client.on("windowResize", (data: {newScreen: { w: number, h: number }}) => {
                 const {newScreen} = data
-                var  scaleX = newScreen.w / 1000
-                var  scaleY = newScreen.h / 1000;
-                Composite.allBodies(this.engine.world).forEach(function(body) {
-                    // Update dimensions
-                    console.log(body.label)
-                    var  scaleX = newScreen.w / 1000
-                    var  scaleY = newScreen.h / 1000;
-                    if (body.label !== "ball")
-                    Body.scale(body, scaleX, scaleY);
-                    // Update position
-                    var newPosition = {
-                      x: body.position.x * scaleX,
-                      y: body.position.y * scaleY
-                    };
-                    console.log()
-                    Body.setPosition(body, newPosition);
-                  });
+                this.obj.divWidth = newScreen.w
+                this.obj.divHeight = newScreen.h
+                 Composite.allBodies(this.engine.world).forEach(function(body) {
+                    if (body.label == "leftPaddle")
+                    console.log("label" , body.bounds.max.x - body.bounds.min.x )
+                //     // Update dimensions
+                //     var  scaleX = newScreen.w / 1000 
+                //     var  scaleY = newScreen.h / 1000 ;
+                //     if (body.label !== "ball"){
+                //         Body.scale(body, scaleX, scaleY);
+                //     }
+                //     // Update position
+                //     var newPosition = {
+                //       x:  body.position.x * newScreen.w / 1000  ,
+                //       y: body.position.y * newScreen.h / 1000 
+                //     };
+                //     console.log()
+                //     Body.setPosition(body, newPosition);
+                   });
               });
+   
         } else {
             console.log("joining user  forced to disconnect")
             client.disconnect(); // No available paddles, disconnect the user

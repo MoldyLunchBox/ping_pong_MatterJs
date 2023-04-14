@@ -14,6 +14,7 @@ const inter = Inter({ subsets: ['latin'] })
 export default function Home() {
   const [joinRoom, setJoinRoom] = useState<string>("hidden")
   const [roomName, setRoomName] = useState<string>("")
+  const [height, setHeight] = useState<string>("75vh")
   const handleRoomName = (e: any) => {
     setRoomName(e.target.value)
   }
@@ -29,8 +30,9 @@ export default function Home() {
     MatterNode.socketStuff()
     function handleResize() {
       var oldscreen = { w : MatterNode.objects.render.canvas.width, h : MatterNode.objects.render.canvas.height}
-      var newScreen = { w: MatterNode.matterContainer.clientWidth, h : MatterNode.matterContainer.clientHeight }
-      MatterNode.responsivity(oldscreen, newScreen)
+      var newScreen = { w: MatterNode.matterContainer.clientWidth, h : MatterNode.matterContainer.clientHeight}
+      console.log(oldscreen, newScreen)
+      MatterNode.responsivity(oldscreen, newScreen, setHeight)
      }
      window.addEventListener('resize', handleResize);
      return () => window.removeEventListener('resize', handleResize);
@@ -56,7 +58,7 @@ joinRoom == "hidden" &&
           </div>
         }
         {
-      <div id="matter-Container" className={`h-[75vh] w-full  ${!joinRoom && "hidden"}`}>  </div>}
+      <div id="matter-Container" className={`h-[667px] w-[375px]  ${!joinRoom && "hidden"}`}>  </div>}
         
      
 
