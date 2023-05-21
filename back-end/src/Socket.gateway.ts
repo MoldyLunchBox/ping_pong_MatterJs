@@ -33,19 +33,7 @@ class matterNode {
     private server: any
     private roomId: string
     private obj: measurements  // window measurements, and positions of some objects
-    translateCords(){
-       this.obj = { 
-        divHeight: this.obj.divHeight,
-        divWidth: this.obj.divWidth,
-        ball:{ x: this.aspectRatio.w * this.obj.ball.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.ball.y / this.obj.divHeight, radius: 20},
-        wallBottom:{ x: this.aspectRatio.w * this.obj.wallBottom.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.wallBottom.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.wallBottom.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.wallBottom.height / this.obj.divHeight },
-        wallTop:{ x: this.aspectRatio.w * this.obj.wallTop.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.wallTop.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.wallTop.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.wallTop.height / this.obj.divHeight },
-        wallLeft:{ x: this.aspectRatio.w * this.obj.wallLeft.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.wallLeft.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.wallLeft.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.wallLeft.height / this.obj.divHeight },
-        wallRight:{ x: this.aspectRatio.w * this.obj.wallRight.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.wallRight.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.wallRight.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.wallRight.height / this.obj.divHeight },
-        leftPaddle:{ x: this.aspectRatio.w * this.obj.leftPaddle.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.leftPaddle.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.leftPaddle.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.leftPaddle.height / this.obj.divHeight },
-        rightPaddle:{ x: this.aspectRatio.w * this.obj.rightPaddle.x / this.obj.divWidth, y: this.aspectRatio.h * this.obj.rightPaddle.y / this.obj.divHeight, width: this.aspectRatio.w * this.obj.rightPaddle.width / this.obj.divWidth, height: this.aspectRatio.h * this.obj.rightPaddle.height / this.obj.divHeight },
-       }
-    }
+
     constructor(server: any, roomId: string, obj: measurements ) {
         this.aspectRatio = {
             w: 375,
@@ -56,10 +44,8 @@ class matterNode {
         this.server = server;
         // cords and measurements of objects
         this.obj = obj
-        console.log(obj)
-        this.translateCords() // translate the cords from frontend screen to backend screen
+        // this.translateCords() // translate the cords from frontend screen to backend screen
         obj = this.obj
-        console.log(this.obj)
         this.engine = Engine.create();
         this.world = this.engine.world;
         this.engine.gravity = {
@@ -99,7 +85,7 @@ class matterNode {
             }
         });
 
-        World.add(this.world, [this.ball, ground, wall, roof, wallLeft, this.leftPaddle, this.rightPaddle]);
+        World.add(this.world, [this.ball, ground, wall, wallLeft, this.leftPaddle, this.rightPaddle]);
         // Start the engine and update the ball's position
         Engine.run(this.engine);
 
@@ -107,13 +93,14 @@ class matterNode {
 
     sendBallPosition() {
         setInterval(() => {
-            console.log(this.availablePaddles[0])
             if (this.availablePaddles.length ){
                 const availablePaddle = this.availablePaddles[0]
                 Body.setPosition(this.paddles[availablePaddle], { x: this.ball.position.x, y: this.paddles[availablePaddle].position.y });
                 this.server.to(this.roomId).emit(availablePaddle, { x: this.ball.position.x, y: this.paddles[availablePaddle].position.y }); 
             }
             this.server.to(this.roomId).emit('ballPosition', { x: this.ball.position.x, y: this.ball.position.y });
+            if (this.ball.position.y < 5)
+            console.log("bottom player won")
             // Send the paddle assignment to the client
 
 
@@ -136,28 +123,7 @@ class matterNode {
                 Body.setVelocity(this.ball, { x: 5, y:0});
                 this.server.to(this.roomId).emit(availablePaddle, { x: this.aspectRatio.w * data.x / this.obj.divWidth, y: this.aspectRatio.h * data.y / this.obj.divHeight }); 
             });
-            client.on("windowResize", (data: {newScreen: { w: number, h: number }}) => {
-                const {newScreen} = data
-                this.obj.divWidth = newScreen.w
-                this.obj.divHeight = newScreen.h
-                 Composite.allBodies(this.engine.world).forEach(function(body) {
-                    if (body.label == "leftPaddle")
-                    console.log("label" , body.bounds.max.x - body.bounds.min.x )
-                //     // Update dimensions
-                //     var  scaleX = newScreen.w / 1000 
-                //     var  scaleY = newScreen.h / 1000 ;
-                //     if (body.label !== "ball"){
-                //         Body.scale(body, scaleX, scaleY);
-                //     }
-                //     // Update position
-                //     var newPosition = {
-                //       x:  body.position.x * newScreen.w / 1000  ,
-                //       y: body.position.y * newScreen.h / 1000 
-                //     };
-                //     console.log()
-                //     Body.setPosition(body, newPosition);
-                   });
-              });
+    
    
         } else {
             console.log("joining user  forced to disconnect")
