@@ -4,7 +4,7 @@ import { Game } from './components/Game';
 
 function App() {
   return (
-    <div className="App">
+    <div className="w-full h-[100vh] bg-gradient-to-b from-black to-[#1e293b]">
       <Game />
     </div>
   );
