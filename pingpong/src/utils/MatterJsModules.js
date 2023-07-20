@@ -245,7 +245,6 @@ export class MatterJsModules {
             if (speed > this.maxSpeed) {
                 // Calculate the scaling factor to adjust the velocity
                 const scalingFactor = this.maxSpeed / speed;
-
                 // Scale down the velocity to match the maximum speed limit
                 this.bodies.ball.velocity.x *= scalingFactor;
                 this.bodies.ball.velocity.y *= scalingFactor;
