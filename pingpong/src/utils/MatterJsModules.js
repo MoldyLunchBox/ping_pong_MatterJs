@@ -237,7 +237,7 @@ export class MatterJsModules {
         return { widthRatio, heightRatio }
     }
 
-    ballTracker(players, setPlayers, setBallSpeed) {
+    ballTracker(players, setPlayers, setBallSpeed, setGoal) {
         setInterval(() => {
             // limit the speed of the ball so it doesnt leave the boundries 
             const speed = Math.sqrt(this.bodies.ball.velocity.x ** 2 + this.bodies.ball.velocity.y ** 2);
@@ -254,13 +254,23 @@ export class MatterJsModules {
             this.modules.Body.setPosition(this.bodies.othersPaddle, { x: this.bodies.othersPaddle.position.x, y: this.bodies.ball.position.y });
 
             //handle winner
+            
             if (this.bodies.ball.position.x < 0) {
-                const score = { you: players.you + 1, comp: players.comp }
-                setPlayers(score)
+                console.log("players",players)
+                setPlayers(prev => ({
+                    you: prev.you + 1,
+                    comp: prev.comp
+                }))
+                setGoal(true)
             }
             else if (this.bodies.ball.position.x > this.matterContainer.clientWidth) {
-                const score = { you: players.you, comp: players.comp + 1 }
-                setPlayers(score)
+                console.log("players",players)
+               
+                setPlayers(prev => ({
+                    you: prev.you,
+                    comp: prev.comp + 1
+                }))
+                setGoal(true)
             }
         })
     }

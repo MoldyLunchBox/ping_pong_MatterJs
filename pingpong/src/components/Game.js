@@ -10,12 +10,15 @@ export const Game = () => {
     const [matterjsInstance, setMatterjsInstance] = useState(null)
     const [players, setPlayers] = useState({ you: 0, comp: 0 })
     const [ballSpeed, setBallSpeed] = useState(10)
+    const [countDown, setCountDown] = useState(3)
+    const [goal, setGoal] = useState(false)
     const maxSpeed = 25
     const divStyle = {
         height: `${height}px`,
     };
     useEffect(() => {
         if (matterjsInstance) {
+            setCountDown(3)
             matterjsInstance.modules.Body.setVelocity(matterjsInstance.bodies.ball, { x: 0, y: 0 });
             matterjsInstance.modules.Body.setPosition(matterjsInstance.bodies.ball, { x: matterjsInstance.obj.divWidth / 2, y: matterjsInstance.obj.divHeight / 2 });
             setTimeout(() => {
@@ -24,16 +27,23 @@ export const Game = () => {
 
             }, 500)
             setTimeout(() => {    // after seconds launch the ball again
-
-
+                setGoal(false)
                 matterjsInstance.modules.Body.setVelocity(matterjsInstance.bodies.ball, { x: 5, y: 6 });
             }, 5000);
+            const interval = setInterval(() => {
+                setCountDown((prevValue) => (prevValue > 0 ? prevValue - 1 : 0));
+            }, 1000);
+
+            return () => clearInterval(interval);
         }
     }, [players])
 
     useEffect(() => {
-        if (gameState == "started")
+        if (gameState == "started") {
+
             matterjsInstance.modules.Body.setVelocity(matterjsInstance.bodies.ball, { x: 5, y: 6 });
+
+        }
     }, [gameState])
 
     useEffect(() => {
@@ -45,9 +55,13 @@ export const Game = () => {
             MatterNode.createBodies()
             MatterNode.events()
             MatterNode.run()
-            MatterNode.ballTracker(players, setPlayers, setBallSpeed)
+            MatterNode.ballTracker(players, setPlayers, setBallSpeed, setGoal)
         }
     }, [height]); // Empty dependency array to run the effect only once
+
+    useEffect(() => {
+        console.log(players)
+    }, [players])
 
     useEffect(() => {
         const matterContainer = document.querySelector("#matter-Container")
@@ -84,6 +98,13 @@ export const Game = () => {
     return (
         <div className="flex px-10 justify-center relative w-full">
             <div className="flex  justify-center items-center flex-col w-full max-w-[900px]">
+                {
+                    goal ?
+                        <span className="countdown absolute top-0  text-white font-mono text-6xl">
+                            <span style={{ '--value': countDown }}></span>
+                        </span>
+                        : null
+                }
                 <div className='h-10 flex text-sm  flex-row my-5 text-white font-semibold items-center  w-full sm:text-lg lg:text-2xl'>
                     {!gameState.length ?
 
@@ -119,8 +140,8 @@ export const Game = () => {
                 <div className="relative w-full ">
                     <div className="rounded border border-red-500 p-1">
                         <div className="flex h-6 p-2 items-center justify-center rounded bg-red-300 text-xs leading-none" style={containerStyle}>
-                        <div class="absolute inset-0  flex items-center justify-center">
-                            <span className="p-1 text-sm text-white">Ball speed</span>
+                            <div class="absolute inset-0  flex items-center justify-center">
+                                <span className="p-1 text-sm text-white">Ball speed</span>
                             </div>
                         </div>
                     </div>
