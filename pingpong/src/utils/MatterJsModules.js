@@ -31,7 +31,7 @@ export class MatterJsModules {
             MouseConstraint: Matter.MouseConstraint,
         }
         this.bodies = {
-            ball: this.modules.Bodies.circle(this.obj.divWidth / 2, this.obj.divHeight / 2, this.obj.ball.radius * this.RAR, { label: "ball", collisionFilter: { group: -1, }, restitution: 1.1, friction: 0, frictionAir: 0, density: 10, render: { fillStyle: this.colors.ball } }),
+            ball: this.modules.Bodies.circle(this.obj.divWidth / 2, this.obj.divHeight / 2, this.obj.ball.radius * this.RAR, { label: "ball", collisionFilter: { group: -1, }, restitution: 1.15, friction: 0, frictionAir: 0, density: 10, render: { fillStyle: this.colors.ball } }),
             circleA: this.modules.Bodies.circle(this.obj.divWidth / 2, this.obj.divHeight / 2, 40 * this.RAR, { isStatic: true, collisionFilter: { group: -1, }, render: { fillStyle: this.colors.wall }, label: "circleA" }),
             circleB: this.modules.Bodies.circle(this.obj.divWidth / 2, this.obj.divHeight / 2, 35 * this.RAR, { isStatic: true, collisionFilter: { group: -1, }, label: "circleB" }),
             circleC: this.modules.Bodies.circle(this.obj.divWidth / 2, this.obj.divHeight / 2, 5 * this.RAR, { isStatic: true, collisionFilter: { group: -1, }, render: { fillStyle: this.colors.wall }, label: "circleC" }),
