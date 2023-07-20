@@ -9,32 +9,44 @@ export const Game = () => {
     const [gameState, setGameState] = useState("")
     const [matterjsInstance, setMatterjsInstance] = useState(null)
     const [players, setPlayers] = useState({ you: 0, comp: 0 })
+    const [ballSpeed, setBallSpeed] = useState(10)
+    const maxSpeed = 25
     const divStyle = {
         height: `${height}px`,
     };
+    useEffect(() => {
+        if (matterjsInstance) {
+            matterjsInstance.modules.Body.setVelocity(matterjsInstance.bodies.ball, { x: 0, y: 0 });
+            matterjsInstance.modules.Body.setPosition(matterjsInstance.bodies.ball, { x: matterjsInstance.obj.divWidth / 2, y: matterjsInstance.obj.divHeight / 2 });
+            setTimeout(() => {
+                matterjsInstance.modules.Body.setPosition(matterjsInstance.bodies.ball, { x: matterjsInstance.obj.divWidth / 2, y: matterjsInstance.obj.divHeight / 2 });
+
+
+            }, 500)
+            setTimeout(() => {    // after seconds launch the ball again
+
+
+                matterjsInstance.modules.Body.setVelocity(matterjsInstance.bodies.ball, { x: 5, y: 6 });
+            }, 5000);
+        }
+    }, [players])
 
     useEffect(() => {
         if (gameState == "started")
-        matterjsInstance.modules.Body.setVelocity(matterjsInstance.bodies.ball, { x: 5, y: 6 });
+            matterjsInstance.modules.Body.setVelocity(matterjsInstance.bodies.ball, { x: 5, y: 6 });
     }, [gameState])
+
     useEffect(() => {
         console.log("ok")
         if (!matterjsInstance && height) {
-            const MatterNode = new MatterJsModules()
+            const MatterNode = new MatterJsModules(maxSpeed)
             setMatterjsInstance(MatterNode)
             MatterNode.createModules()
             MatterNode.createBodies()
             MatterNode.events()
             MatterNode.run()
-            MatterNode.ballTracker()
+            MatterNode.ballTracker(players, setPlayers, setBallSpeed)
         }
-        // MatterNode.socketStuff()
-        // MatterNode.updateGameScore(setScore, setCountDown, setPlayers)
-        // MatterNode.gameOverListener(setIsModalOpen, setWinner)
-        // MatterNode.restartGameListener(setIsModalOpen)
-
-
-
     }, [height]); // Empty dependency array to run the effect only once
 
     useEffect(() => {
@@ -54,23 +66,25 @@ export const Game = () => {
             window.removeEventListener('resize', handleResize); // Clean up the event listener
         };
     }, []);
+
     useEffect(() => {
         matterjsInstance?.onWindowSizeChange()
 
     }, [height])
 
-    const handleClickStart = ()=>{
+    const handleClickStart = () => {
         setGameState("started")
     }
 
-
-
-
+    const containerStyle = {
+        width: `${ballSpeed * 100 / maxSpeed}%`,
+        height: `${ballSpeed * 100 / maxSpeed}%`,
+    };
 
     return (
         <div className="flex p-10 justify-center relative w-full">
             <div className="flex  justify-center items-center flex-col w-full max-w-[900px]">
-                <div className='h-10 flex text-sm  flex-row bg-black my-5 text-white font-semibold items-center  w-full sm:text-lg lg:text-2xl'>
+                <div className='h-10 flex text-sm  flex-row my-5 text-white font-semibold items-center  w-full sm:text-lg lg:text-2xl'>
                     {!gameState.length ?
 
                         <div class="absolute inset-0 top-10  flex items-center justify-center">
@@ -102,6 +116,16 @@ export const Game = () => {
                         </div>
                     </div>
                 </div>
+                <div className="relative w-full ">
+                    <div className="rounded border border-red-500 p-1">
+                        <div className="flex h-6 p-2 items-center justify-center rounded bg-red-300 text-xs leading-none" style={containerStyle}>
+                        <div class="absolute inset-0  flex items-center justify-center">
+                            <span className="p-1 text-sm text-white">Ball speed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="matter-Container" style={divStyle} className={`border-4 border-white h-full flex  bg-gradient-to-r from-[#064e3b] to-[#312e81] w-full max-w-[990px]}`}>   </div>
             </div>
         </div>
