@@ -12,7 +12,6 @@ export class MatterJsModules {
         this.oldDim = { w: this.matterContainer.clientWidth, h: this.matterContainer.clientHeight }
         this.RAR = this.matterContainer.clientWidth / 375   // i dont know whatt his is actually called so i named it relative aspect ration, its the relation between the origine dimmentions (375/ 375 * 19/6) and the initial dimmentions of the div
         this.obj = this.saveMeasurements({ width: this.matterContainer.clientWidth, height: this.matterContainer.clientHeight })
-        console.log("width", this.matterContainer.clientWidth, "height", this.matterContainer.clientHeight)
         this.colors = {
             leftP: "#86efac",
             rightP: "#a78bfa",
@@ -31,7 +30,7 @@ export class MatterJsModules {
             MouseConstraint: Matter.MouseConstraint,
         }
         this.bodies = {
-            ball: this.modules.Bodies.circle(this.obj.divWidth / 2, this.obj.divHeight / 2, this.obj.ball.radius * this.RAR, { label: "ball", collisionFilter: { group: -1, }, restitution: 1.15, friction: 0, frictionAir: 0, density: 10, render: { fillStyle: this.colors.ball } }),
+            ball: this.modules.Bodies.circle(this.obj.divWidth / 2, this.obj.divHeight / 2, this.obj.ball.radius * this.RAR, {mass: 1  , label: "ball", collisionFilter: { group: -1, }, restitution: 1.15, friction: 0, frictionAir: 0, density: 10, render: { fillStyle: this.colors.ball } }),
             circleA: this.modules.Bodies.circle(this.obj.divWidth / 2, this.obj.divHeight / 2, 40 * this.RAR, { isStatic: true, collisionFilter: { group: -1, }, render: { fillStyle: this.colors.wall }, label: "circleA" }),
             circleB: this.modules.Bodies.circle(this.obj.divWidth / 2, this.obj.divHeight / 2, 35 * this.RAR, { isStatic: true, collisionFilter: { group: -1, }, label: "circleB" }),
             circleC: this.modules.Bodies.circle(this.obj.divWidth / 2, this.obj.divHeight / 2, 5 * this.RAR, { isStatic: true, collisionFilter: { group: -1, }, render: { fillStyle: this.colors.wall }, label: "circleC" }),
@@ -82,8 +81,8 @@ export class MatterJsModules {
 
         }
 
-        this.bodies.myPaddle = this.bodies.rightPaddle
-        this.bodies.othersPaddle = this.bodies.leftPaddle
+        this.bodies.myPaddle =  this.bodies.leftPaddle
+        this.bodies.othersPaddle = this.bodies.rightPaddle
     }
 
 
@@ -111,7 +110,6 @@ export class MatterJsModules {
         return obj
     }
     createModules() {
-        console.log(this.matterContainer.clientWidth, this.matterContainer.clientHeight)
         if (this.matterContainer) {
 
             this.objects.engine = this.modules.Engine.create();
@@ -135,6 +133,10 @@ export class MatterJsModules {
                     render: {
                         visible: false
                     }
+                },
+                collisionFilter: {
+                    mask: ~this.modules.Body.nextGroup(true), // Set mask to ignore all bodies
+                    group: this.modules.Body.nextGroup(true) // Create a new group
                 }
             })
         }
@@ -146,7 +148,7 @@ export class MatterJsModules {
         this.modules.Composite.add(this.objects.engine.world, [this.bodies.circleA, this.bodies.circleB, this.bodies.circleC, this.bodies.centerLine, this.bodies.ball, this.bodies.leftPaddle, this.bodies.roof, this.bodies.ground, this.bodies.rightPaddle]);
     }
     events() {
-
+     
         Events.on(this.objects.mouseConstraint, "mousemove", (e) => {
             this.modules.Body.setPosition(this.bodies.myPaddle, { x: this.bodies.myPaddle.position.x, y: e.mouse.position.y });
             const oldWidth = this.matterContainer.clientWidth;
@@ -256,7 +258,6 @@ export class MatterJsModules {
             //handle winner
             
             if (this.bodies.ball.position.x < 0) {
-                console.log("players",players)
                 setPlayers(prev => ({
                     you: prev.you + 1,
                     comp: prev.comp
@@ -264,7 +265,6 @@ export class MatterJsModules {
                 setGoal(true)
             }
             else if (this.bodies.ball.position.x > this.matterContainer.clientWidth) {
-                console.log("players",players)
                
                 setPlayers(prev => ({
                     you: prev.you,

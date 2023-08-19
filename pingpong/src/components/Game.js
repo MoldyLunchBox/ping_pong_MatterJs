@@ -47,7 +47,6 @@ export const Game = () => {
     }, [gameState])
 
     useEffect(() => {
-        console.log("ok")
         if (!matterjsInstance && height) {
             const MatterNode = new MatterJsModules(maxSpeed)
             setMatterjsInstance(MatterNode)
@@ -60,14 +59,12 @@ export const Game = () => {
     }, [height]); // Empty dependency array to run the effect only once
 
     useEffect(() => {
-        console.log(players)
     }, [players])
 
     useEffect(() => {
         const matterContainer = document.querySelector("#matter-Container")
         if (matterContainer)
             setHeight(matterContainer.clientWidth / aspect)
-        console.log(matterContainer.clientWidth / aspect)
         const handleResize = () => {
 
             setHeight(matterContainer?.clientWidth / aspect); // Update the width based on the window size

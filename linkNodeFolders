@@ -1,4 +1,0 @@
-mkdir -p  ~/goinfre/nodeFolders/front
-mkdir -p ~/goinfre/nodeFolders/back
-cd back-end ; npm install
-cd front-end; npm install
