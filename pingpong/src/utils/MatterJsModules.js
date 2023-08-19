@@ -259,16 +259,16 @@ export class MatterJsModules {
             
             if (this.bodies.ball.position.x < 0) {
                 setPlayers(prev => ({
-                    you: prev.you + 1,
-                    comp: prev.comp
+                    you: prev.you ,
+                    comp: prev.comp+ 1
                 }))
                 setGoal(true)
             }
             else if (this.bodies.ball.position.x > this.matterContainer.clientWidth) {
                
                 setPlayers(prev => ({
-                    you: prev.you,
-                    comp: prev.comp + 1
+                    you: prev.you + 1,
+                    comp: prev.comp 
                 }))
                 setGoal(true)
             }
