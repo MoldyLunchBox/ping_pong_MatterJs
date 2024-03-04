@@ -1,1 +1,1 @@
-just as the title says, a ping pong game coded using a library  called matterjs,
+PingPong: A React-powered game where players challenge the computer to a Ping Pong match.
