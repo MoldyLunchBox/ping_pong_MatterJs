@@ -1,10 +1,10 @@
 import { Game } from "./components/Game";
 
 const App = () => (
-    <div className="w-full h-[100vh] flex flex-col bg-gradient-to-b from-black to-[#1e293b]">
-        <h1 className="flex items-center text-2xl font-extrabold my-10 justify-center text-white sm:text-4xl lg:text-6xl lg:my-20">
+    <div className="flex min-h-screen w-full flex-col bg-gradient-to-b from-black to-[#1e293b] pb-12">
+        <h1 className="my-8 flex flex-wrap items-center justify-center gap-3 px-4 text-center text-2xl font-extrabold text-white sm:text-4xl lg:my-12 lg:text-5xl">
             Ping Pong
-            <span className="bg-blue-100 text-blue-800 text-2xl font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ml-2">
+            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800 sm:text-sm lg:text-base">
                 But you can win
             </span>
         </h1>

@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { PongEngine } from "../game/PongEngine";
+import { OPPONENT_FREEZE_SPEED, PongEngine } from "../game/PongEngine";
 import { Countdown } from "./Countdown";
+import { FreezeNotice } from "./FreezeNotice";
 import { Scoreboard } from "./Scoreboard";
 import { SpeedMeter } from "./SpeedMeter";
 import { StartOverlay } from "./StartOverlay";
 
 const ASPECT = 16 / 9;
 const MAX_SPEED = 25;
-const COUNTDOWN_FROM = 3;
 const SERVE_DELAY = 5000;
 const RECENTER_DELAY = 500;
+// counting down from the serve delay keeps the number from sitting on 0
+const COUNTDOWN_FROM = SERVE_DELAY / 1000;
 
 export const Game = () => {
     const boardRef = useRef(null);
@@ -17,9 +19,11 @@ export const Game = () => {
     const [height, setHeight] = useState(0);
     const [started, setStarted] = useState(false);
     const [score, setScore] = useState({ player: 0, opponent: 0 });
-    const [ballSpeed, setBallSpeed] = useState(10);
+    const [ballSpeed, setBallSpeed] = useState(0);
     const [countdown, setCountdown] = useState(COUNTDOWN_FROM);
     const [goal, setGoal] = useState(false);
+
+    const opponentFrozen = ballSpeed >= OPPONENT_FREEZE_SPEED;
 
     // the board keeps a 16/9 box, so its height follows the width it is given
     useEffect(() => {
@@ -80,17 +84,27 @@ export const Game = () => {
     }, [score]);
 
     return (
-        <div className="flex px-10 justify-center relative w-full">
-            <div className="flex justify-center items-center flex-col w-full max-w-[900px]">
-                {goal ? <Countdown value={countdown} /> : null}
-                {!started ? <StartOverlay onStart={() => setStarted(true)} /> : null}
-                <Scoreboard score={score} />
-                <SpeedMeter speed={ballSpeed} maxSpeed={MAX_SPEED} />
-                <div
-                    ref={boardRef}
-                    style={{ height: `${height}px` }}
-                    className="border-4 border-white h-full flex bg-gradient-to-r from-[#064e3b] to-[#312e81] w-full max-w-[990px]"
-                ></div>
+        <div className="flex w-full justify-center px-4 sm:px-10">
+            <div className="flex w-full max-w-[900px] flex-col items-center">
+                <Scoreboard score={score} opponentFrozen={opponentFrozen} />
+                <SpeedMeter
+                    speed={ballSpeed}
+                    maxSpeed={MAX_SPEED}
+                    freezeAt={OPPONENT_FREEZE_SPEED}
+                />
+
+                <div className="relative w-full">
+                    <div
+                        ref={boardRef}
+                        style={{ height: `${height}px` }}
+                        className="flex w-full overflow-hidden rounded-xl bg-gradient-to-r from-[#064e3b] to-[#312e81] shadow-2xl ring-1 ring-white/25"
+                    ></div>
+                    {!started ? (
+                        <StartOverlay onStart={() => setStarted(true)} />
+                    ) : null}
+                    {goal ? <Countdown value={countdown} /> : null}
+                    {started && !goal && opponentFrozen ? <FreezeNotice /> : null}
+                </div>
             </div>
         </div>
     );

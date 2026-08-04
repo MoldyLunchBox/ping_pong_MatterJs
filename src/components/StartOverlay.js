@@ -1,12 +1,19 @@
 export const StartOverlay = ({ onStart }) => (
-    <div className="absolute inset-0 top-10 flex items-center justify-center">
-        <div className="w-1/3 h-1/3 max-w-[300px] backdrop-blur-sm flex items-center gap-2 flex-col justify-center bg-white/30 sm:gap-11 rounded-lg bg-white">
-            <div className="text-center bg-white bg-opacity-25 rounded-sm w-full font-extrabold text-xs text-[#1e1b4b] sm:text-lg">
-                START THE GAME
+    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-950/50 px-4 backdrop-blur-sm">
+        <div className="flex max-w-[22rem] flex-col items-center gap-4 rounded-xl bg-white/10 px-6 py-5 text-center shadow-xl ring-1 ring-white/20 sm:px-8 sm:py-6">
+            <div>
+                <div className="text-sm font-extrabold uppercase tracking-widest text-white sm:text-lg">
+                    Start the game
+                </div>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-300 sm:text-sm">
+                    Move your mouse to slide the green paddle. Get the ball fast
+                    enough and the computer paddle freezes &mdash; that is your
+                    chance to score.
+                </p>
             </div>
             <button
                 onClick={onStart}
-                className="bg-[#60a5fa] bg-opacity-90 rounded-sm p-1 shadow sm:px-4 sm:p-2 hover:bg-[#93c5fd]"
+                className="rounded-md bg-[#60a5fa] px-6 py-2 text-sm font-semibold text-slate-900 shadow transition hover:bg-[#93c5fd] active:scale-95"
             >
                 Start
             </button>

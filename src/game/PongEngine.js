@@ -10,10 +10,14 @@ import {
     Runner,
 } from "matter-js";
 
-const COLORS = {
+export const COLORS = {
     playerPaddle: "#86efac",
     opponentPaddle: "#a78bfa",
-    wall: "#FFEBEB",
+    // the opponent turns icy while it is frozen
+    opponentPaddleFrozen: "#bae6fd",
+    wall: "#f8fafc",
+    // the centre markings sit behind the play, so they stay faint
+    mark: "rgba(255, 255, 255, 0.35)",
     ball: "#ede9fe",
 };
 
@@ -27,9 +31,12 @@ const PADDLE_LENGTH = 50;
 const PADDLE_THICKNESS = 10;
 const SERVE_VELOCITY = { x: 5, y: 6 };
 
-// above this speed the opponent stops following the ball, which is what makes
-// the game winnable
-const OPPONENT_TRACKING_SPEED = 20;
+// at this speed the opponent paddle freezes instead of following the ball, which
+// is the whole reason the game is winnable
+export const OPPONENT_FREEZE_SPEED = 20;
+
+// the tracker runs every few milliseconds, far too often to re-render the UI on
+const SPEED_REPORT_MS = 50;
 
 const speedOf = (body) =>
     Math.sqrt(body.velocity.x ** 2 + body.velocity.y ** 2);
@@ -44,6 +51,8 @@ export class PongEngine {
         this.maxSpeed = maxSpeed;
         this.onSpeed = onSpeed;
         this.onScore = onScore;
+        this.opponentFrozen = false;
+        this.lastSpeedReport = 0;
 
         this.width = container.clientWidth;
         this.height = container.clientHeight;
@@ -88,26 +97,26 @@ export class PongEngine {
             render: { fillStyle: COLORS.ball },
         });
 
-        // center mark: an outer ring, a dot and the halfway line
+        // centre mark: a ring drawn as an outline, a dot and the halfway line
         const decoration = [
             Bodies.circle(centerX, centerY, 40 * scale, {
                 isStatic: true,
                 collisionFilter: { group: -1 },
-                render: { fillStyle: COLORS.wall },
-            }),
-            Bodies.circle(centerX, centerY, 35 * scale, {
-                isStatic: true,
-                collisionFilter: { group: -1 },
+                render: {
+                    fillStyle: "transparent",
+                    strokeStyle: COLORS.mark,
+                    lineWidth: 2,
+                },
             }),
             Bodies.circle(centerX, centerY, 5 * scale, {
                 isStatic: true,
                 collisionFilter: { group: -1 },
-                render: { fillStyle: COLORS.wall },
+                render: { fillStyle: COLORS.mark },
             }),
-            Bodies.rectangle(centerX, centerY, 5 * scale, width, {
+            Bodies.rectangle(centerX, centerY, 3 * scale, width, {
                 isStatic: true,
                 collisionFilter: { group: -1 },
-                render: { fillStyle: COLORS.wall },
+                render: { fillStyle: COLORS.mark },
             }),
         ];
 
@@ -196,7 +205,6 @@ export class PongEngine {
 
     track() {
         const speed = speedOf(this.ball);
-        this.onSpeed(speed);
 
         if (speed > this.maxSpeed) {
             // squared on purpose: it drops the ball back under the cap instead
@@ -206,16 +214,38 @@ export class PongEngine {
                 x: this.ball.velocity.x * factor,
                 y: this.ball.velocity.y * factor,
             });
-        } else if (speed < OPPONENT_TRACKING_SPEED) {
+        }
+
+        this.setOpponentFrozen(speed >= OPPONENT_FREEZE_SPEED);
+        if (!this.opponentFrozen) {
             Body.setPosition(this.opponentPaddle, {
                 x: this.opponentPaddle.position.x,
                 y: this.ball.position.y,
             });
         }
 
+        this.reportSpeed(speed);
+
         if (this.ball.position.x < 0) this.onScore("opponent");
         else if (this.ball.position.x > this.container.clientWidth)
             this.onScore("player");
+    }
+
+    setOpponentFrozen(frozen) {
+        if (frozen === this.opponentFrozen) return;
+
+        this.opponentFrozen = frozen;
+        this.opponentPaddle.render.fillStyle = frozen
+            ? COLORS.opponentPaddleFrozen
+            : COLORS.opponentPaddle;
+    }
+
+    reportSpeed(speed) {
+        const now = Date.now();
+        if (now - this.lastSpeedReport < SPEED_REPORT_MS) return;
+
+        this.lastSpeedReport = now;
+        this.onSpeed(speed);
     }
 
     resetBall() {
