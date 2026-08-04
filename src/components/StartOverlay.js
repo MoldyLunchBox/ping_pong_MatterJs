@@ -7,7 +7,7 @@ export const StartOverlay = ({ onStart }) => (
                 </div>
                 <p className="mt-1.5 text-xs leading-relaxed text-slate-300 sm:text-sm">
                     Move your mouse to slide the green paddle. Get the ball fast
-                    enough and the computer paddle freezes &mdash; that is your
+                    enough and the computer paddle freezes. that is your
                     chance to score.
                 </p>
             </div>
