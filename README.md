@@ -14,7 +14,7 @@ npm install
 npm start
 ```
 
-Then open http://localhost:3000. `npm run build` produces the production bundle
+Then open http://localhost:3000 `npm run build` produces the production bundle
 in `build/`.
 
 ## Layout
